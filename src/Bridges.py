@@ -19,15 +19,6 @@ def leer_archivo(nombre_archivo):
     return matriz
 
 
-## Ejemplo de uso
-nombre_archivo = 'solm1.txt'
-matriz = leer_archivo(nombre_archivo)
-
-# Mostrar la matriz cuadrada
-for fila in matriz:
-    print(fila)
-
-
 def validar_matriz(matriz):
     global numeros
     filas = len(matriz)
@@ -68,9 +59,6 @@ def validar_matriz(matriz):
     return
 
 
-validar_matriz(matriz)
-
-
 #que cada isla tenga las conexiones necesarias
 def validar_conexiones_necesarias(matriz):
     filas = len(matriz)
@@ -104,14 +92,26 @@ def validar_conexiones_necesarias(matriz):
                 solucion.append((int(matriz[i][j]), int(suma))) #lista de tuplas
     return solucion
 
-solucion = validar_conexiones_necesarias(matriz)
-
 
 def validar_solucion(solucion):
     for i in range(len(solucion)):
         if(solucion[i][0] != solucion[i][1]):
             print(f"PERDIO le faltan conexiones: a la isla {solucion[i][0]} tiene {solucion[i][1]} conexiones")
-    return
+    print("GANÓ eeee")
 
+## Ejemplo de uso
+nombre_archivo = 'solm1.txt'
+matriz = leer_archivo(nombre_archivo)
+
+# Mostrar la matriz cuadrada
+for fila in matriz:
+    print(fila)
+
+validar_matriz(matriz)
+
+solucion = validar_conexiones_necesarias(matriz)
 
 validar_solucion(solucion)
+
+
+
