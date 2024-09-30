@@ -1,22 +1,106 @@
+import re
+from grafo import Grafo
+
 numeros = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
+matriz_a_grafo = [
+    ['2', '-', '3', '-', '-', '-', '4', '-', '-', '-', '2', ' ', ' '],
+    ['|', ' ', '|', ' ', ' ', ' ', 'H', ' ', ' ', ' ', '|', ' ', '2'],
+    ['|', ' ', '|', ' ', ' ', ' ', 'H', ' ', ' ', ' ', '|', ' ', 'H'],
+    ['1', ' ', '1', ' ', ' ', ' ', 'H', ' ', '1', '-', '3', ' ', '3'],
+    [' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', '|', ' ', '|'],
+    ['2', '=', '=', '=', '=', '=', '8', '=', '=', '=', '5', '-', '2'],
+    [' ', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', '|', ' ', ' '],
+    ['3', '-', '-', '-', '3', ' ', 'H', ' ', ' ', ' ', '|', ' ', '1'],
+    ['H', ' ', ' ', ' ', 'H', ' ', 'H', ' ', ' ', ' ', '|', ' ', '|'],
+    ['H', ' ', ' ', ' ', '2', ' ', 'H', ' ', ' ', ' ', '3', '=', '4'],
+    ['H', ' ', ' ', ' ', ' ', ' ', 'H', ' ', ' ', ' ', ' ', ' ', '|'],
+    ['3', '-', '-', '-', '-', '-', '3', ' ', '1', '-', '-', '-', '2']
+]
+regex_conexiones = r'[^-=|H]'
+
+def nombrar_nodos(matriz_numeros):
+    nombre = 97
+    for i in range(len(matriz_numeros)):            # Bucle sobre las filas
+        for j in range(len(matriz_numeros[i])):
+            if matriz_numeros[i][j].isdigit(): #verifica que esta en una isla
+                matriz_numeros[i][j] = chr(nombre)
+                nombre += 1
+
+    return matriz_numeros
+
+def generar_grafo(matriz_a_grafo):
+    grafo_generado = Grafo()
+    filas = len(matriz_a_grafo)
+    columnas = len(matriz_a_grafo[0])
+
+    matriz_a_grafo = nombrar_nodos(matriz_a_grafo)
+
+    for i in range(filas):
+        for j in range(columnas):
+            # Si encontramos un nodo (letra) y no es 'H'
+            if matriz_a_grafo[i][j].isalpha() and matriz_a_grafo[i][j] != 'H':
+                nodo_actual = matriz_a_grafo[i][j]
+
+                # Verificar conexiones horizontales
+                if j + 1 < columnas and matriz_a_grafo[i][j + 1] in ['-', '=']:
+                    k = j + 2
+                    # Buscar el siguiente nodo
+                    while k < columnas and (not matriz_a_grafo[i][k].isalpha() or matriz_a_grafo[i][k] == 'H'):
+                        k += 1
+                    if k < columnas and matriz_a_grafo[i][k].isalpha() and matriz_a_grafo[i][k] != 'H':
+                        nodo_vecino = matriz_a_grafo[i][k]
+                        grafo_generado.agregar_arista(nodo_actual, nodo_vecino)
+
+                # Verificar conexiones verticales
+                if i + 1 < filas and matriz_a_grafo[i + 1][j] in ['|', 'H']:
+                    k = i + 2
+                    # Buscar el siguiente nodo
+                    while k < filas and (not matriz_a_grafo[k][j].isalpha() or matriz_a_grafo[k][j] == 'H'):
+                        k += 1
+                    if k < filas and matriz_a_grafo[k][j].isalpha() and matriz_a_grafo[k][j] != 'H':
+                        nodo_vecino = matriz_a_grafo[k][j]
+                        grafo_generado.agregar_arista(nodo_actual, nodo_vecino)
+
+    for fila in matriz_a_grafo:
+        print(fila)
+
+    print(grafo_generado.mostrar_grafo())
+
+    if grafo_generado.es_conexo():
+        print("El grafo es conexo.")
+    else:
+        print("El grafo no es conexo.")
+
+
 
 def leer_archivo(nombre_archivo):
+
+    matriz_con_espacios = []
     matriz = []
-    max_len = 0
 
-    # Leer todas las líneas del archivo y determinar la longitud máxima
     with open(nombre_archivo, 'r') as archivo:
+        # Leer la primera línea que contiene el tamaño de la matriz
+        tamano = archivo.readline().strip()
+        filas, columnas = map(int, tamano.split(','))  # Obtener el número de filas y columnas
+
+        # Leer las siguientes líneas que contienen los datos de la matriz
+
         for linea in archivo:
-            linea = linea.rstrip('\n')  # Solo eliminar saltos de línea, no espacios
-            max_len = max(max_len, len(linea))  # Encontrar la longitud máxima de las líneas
-            matriz.append(list(linea))
+            matriz.append(list(linea.strip()))  # Convertir cada línea en una lista de caracteres
 
-    # Ajustar todas las filas a la longitud máxima con espacios
-    for i in range(len(matriz)):
-        if len(matriz[i]) < max_len: #si el tamaño de la fila
-            matriz[i] += [' '] * (max_len - len(matriz[i]))  # Crea lista espacios en blanco y añade al final
+    # Generar la matriz con espacios vacíos entre cada casilla
 
-    return matriz
+    for fila in matriz:
+        matriz_con_espacios.append(' '.join(fila))  # Unir los elementos con un espacio entre ellos
+
+    for i in range(len(matriz_con_espacios)):
+        fila = list(matriz_con_espacios[i])  # Convertir la fila en una lista de caracteres
+        for j in range(len(fila)):
+            if fila[j] == '0':
+                fila[j] = ' '  # Reemplazar '0' con un espacio en blanco
+        matriz_con_espacios[i] = ''.join(fila)
+
+    return matriz_con_espacios
 
 
 def validar_matriz(matriz):
@@ -93,25 +177,39 @@ def validar_conexiones_necesarias(matriz):
     return solucion
 
 
+def escribir_matriz_en_archivo(ruta_archivo, matriz):
+    with open(ruta_archivo, 'w') as archivo:
+        for fila in matriz:
+            archivo.write(fila + '\n')
+
+
 def validar_solucion(solucion):
     for i in range(len(solucion)):
         if(solucion[i][0] != solucion[i][1]):
             print(f"PERDIO le faltan conexiones: a la isla {solucion[i][0]} tiene {solucion[i][1]} conexiones")
     print("GANÓ eeee")
 
+
 ## Ejemplo de uso
-nombre_archivo = 'solm1.txt'
+nombre_archivo = 'm.txt'
 matriz = leer_archivo(nombre_archivo)
 
 # Mostrar la matriz cuadrada
 for fila in matriz:
     print(fila)
 
-validar_matriz(matriz)
+#Generar archivo de prueba
+escribir_matriz_en_archivo("generado.txt", matriz)
 
-solucion = validar_conexiones_necesarias(matriz)
+print('-------------------------------------------------------')
+#Generar grafo a partir de matriz solucionada
+generar_grafo(matriz_a_grafo)
 
-validar_solucion(solucion)
+#validar_matriz(matriz)
+
+#solucion = validar_conexiones_necesarias(matriz)
+
+#validar_solucion(solucion)
 
 
 
