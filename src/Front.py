@@ -1,10 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox
-
+import Bridges
 SYMBOLS = [' ', '=', '-', '|', 'H', '']  + [str(i) for i in range(10)] # Símbolos permitidos
 
+
 # Función para leer el archivo y crear la matriz
-def leer_archivo(archivo):
+def leer_archivo_generado(archivo):
     with open(archivo, 'r') as f:
         lines = f.readlines()
 
@@ -19,12 +20,42 @@ def leer_archivo(archivo):
 
     return matriz, num_filas, num_columnas
 
+
+
 # Función para guardar el estado actual de la cuadrícula en un archivo
 def guardar_estado(archivo, grid_state):
+    #SE LLAMAN A LAS FUNCIONES DE BRIDGES
+
+    # Suponiendo que grid_state es una lista bidimensional de celdas
+    # Inicializa la matriz con el tamaño adecuado
+    matriz_bridges = [[' ' for _ in range(len(grid_state[0]))] for _ in range(len(grid_state))]
+
+    i = 0
+    for fila in grid_state:
+        fila_str = ''.join(cell.get() if cell.get() != "" else ' ' for cell in fila)
+        for j in range(len(fila_str)):
+            matriz_bridges[i][j] = fila_str[j]  # Asigna el valor de fila_str a la matriz
+        i += 1
+
+    # Imprimir la matriz resultante
+    for fila in matriz_bridges:
+        print(fila)
+
+
+    matriz_valida = Bridges.validar_matriz(matriz_bridges) #RETORNA TRUE SI LAS CONEXIONES ESTAN BIEN
+    solucion = Bridges.validar_conexiones_necesarias(matriz_bridges) #RETORNA LAS CONEXIONES DE CADA ISLA
+    ganador = Bridges.validar_solucion(solucion) #RETORNA TRUE SI ESAS CONEXIONES SON CORRECTAS
+    conectado = Bridges.generar_grafo(matriz_bridges)
+
     with open(archivo, 'w') as f:
         for fila in grid_state:
             fila_str = ''.join(cell.get() if cell.get() != "" else ' ' for cell in fila)
             f.write(fila_str + '\n')
+
+    if matriz_valida and ganador and conectado:
+        print("GANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+    else:
+        print("PERDIOOOOOOOO")
 
 # Función para validar si los datos ingresados son válidos
 def validar_simbolo(simbolo):
@@ -45,33 +76,37 @@ def guardar_con_validacion():
     else:
         messagebox.showerror("Error", "Hay valores no permitidos en la cuadrícula.")
 
-# Cargar la matriz desde el archivo .txt
-archivo = "generado.txt"  # Reemplaza con tu archivo
-matriz, num_filas, num_columnas = leer_archivo(archivo)
 
-# Crear ventana principal
-root = tk.Tk()
-root.title("Bridges Game")
 
-# Crear marco para contener la cuadrícula
-frame = tk.Frame(root)
-frame.pack()
+if __name__ == '__main__':
+    # Cargar la matriz desde el archivo .txt
+    Bridges.leer_archivo("m.txt")
+    archivo = "generado.txt"  # Reemplaza con tu archivo
+    matriz, num_filas, num_columnas = leer_archivo_generado(archivo)
 
-# Crear celdas de entrada en el Canvas para cada celda de la matriz
-celdas = [[None for _ in range(num_columnas)] for _ in range(num_filas)]
+    # Crear ventana principal
+    root = tk.Tk()
+    root.title("Bridges Game")
 
-for row in range(num_filas):
-    for col in range(num_columnas):
-        entry = tk.Entry(frame, width=4, justify='center')
-        entry.grid(row=row, column=col)
-        if col < len(matriz[row]) and matriz[row][col] != ' ':  # Check if the column index is within the valid range and not a space
-            entry.insert(0, matriz[row][col])  # Insertar el valor inicial desde el archivo
-        entry.bind('<FocusOut>', lambda e, r=row, c=col: actualizar_celda(e, r, c))  # Validar al salir del campo
-        celdas[row][col] = entry
+    # Crear marco para contener la cuadrícula
+    frame = tk.Frame(root)
+    frame.pack()
 
-# Crear botón de "Guardar"
-save_button = tk.Button(root, text="Guardar", command=guardar_con_validacion)
-save_button.pack()
+    # Crear celdas de entrada en el Canvas para cada celda de la matriz
+    celdas = [[None for _ in range(num_columnas)] for _ in range(num_filas)]
 
-# Iniciar la aplicación
-root.mainloop()
+    for row in range(num_filas):
+        for col in range(num_columnas):
+            entry = tk.Entry(frame, width=4, justify='center')
+            entry.grid(row=row, column=col)
+            if col < len(matriz[row]) and matriz[row][col] != ' ':  # Check if the column index is within the valid range and not a space
+                entry.insert(0, matriz[row][col])  # Insertar el valor inicial desde el archivo
+            entry.bind('<FocusOut>', lambda e, r=row, c=col: actualizar_celda(e, r, c))  # Validar al salir del campo
+            celdas[row][col] = entry
+
+    # Crear botón de "Guardar"
+    save_button = tk.Button(root, text="Guardar", command=guardar_con_validacion)
+    save_button.pack()
+
+    # Iniciar la aplicación
+    root.mainloop()

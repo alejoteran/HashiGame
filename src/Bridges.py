@@ -68,15 +68,15 @@ def generar_grafo(matriz_a_grafo):
 
     if grafo_generado.es_conexo():
         print("El grafo es conexo.")
+        return True
     else:
         print("El grafo no es conexo.")
+        return False
 
 
 
 def leer_archivo(nombre_archivo):
-
     matriz_con_espacios = []
-    matriz = []
 
     with open(nombre_archivo, 'r') as archivo:
         # Leer la primera línea que contiene el tamaño de la matriz
@@ -84,23 +84,31 @@ def leer_archivo(nombre_archivo):
         filas, columnas = map(int, tamano.split(','))  # Obtener el número de filas y columnas
 
         # Leer las siguientes líneas que contienen los datos de la matriz
-
-        for linea in archivo:
-            matriz.append(list(linea.strip()))  # Convertir cada línea en una lista de caracteres
+        matriz = [list(linea.strip()) for linea in archivo]  # Convertir cada línea en una lista de caracteres
 
     # Generar la matriz con espacios vacíos entre cada casilla
-
     for fila in matriz:
-        matriz_con_espacios.append(' '.join(fila))  # Unir los elementos con un espacio entre ellos
+        nueva_fila = []
+        for elemento in fila:
+            # Reemplazar '0' con espacio
+            if elemento == '0':
+                nueva_fila.append(' ')
+            else:
+                nueva_fila.append(elemento)
+            nueva_fila.append(' ')  # Agregar espacio entre los elementos
 
-    for i in range(len(matriz_con_espacios)):
-        fila = list(matriz_con_espacios[i])  # Convertir la fila en una lista de caracteres
-        for j in range(len(fila)):
-            if fila[j] == '0':
-                fila[j] = ' '  # Reemplazar '0' con un espacio en blanco
-        matriz_con_espacios[i] = ''.join(fila)
+        # Agregar la fila generada con espacios
+        matriz_con_espacios.append(nueva_fila[:-1])  # Eliminar el último espacio innecesario
+
+        # Agregar una fila adicional de espacios en blanco del mismo tamaño que la fila anterior
+        fila_vacia = [' ' for _ in nueva_fila[:-1]]  # Crear una fila de espacios
+        matriz_con_espacios.append(fila_vacia)
+
+    # Eliminar la última fila vacía si no se desea al final de la matriz
+    matriz_con_espacios.pop()
 
     return matriz_con_espacios
+
 
 
 def validar_matriz(matriz):
@@ -117,6 +125,7 @@ def validar_matriz(matriz):
                     continue
                 else:
                     print(f"Error en ({i}, {j}): con -")
+                    return False
 
             if matriz[i][j] == '=':
                 if  (j > 0 and (matriz[i][j - 1] == '=' or matriz[i][j - 1] in numeros)) and \
@@ -124,6 +133,7 @@ def validar_matriz(matriz):
                     continue
                 else:
                     print(f"Error en ({i}, {j}): con =")
+                    return False
 
 
             if matriz[i][j] == '|':
@@ -132,6 +142,7 @@ def validar_matriz(matriz):
                     continue
                 else:
                     print(f"Error en ({i}, {j}): con |")
+                    return False
 
             if matriz[i][j] == 'H':
                 if  (i > 0 and (matriz[i - 1][j] == 'H' or matriz[i - 1][j] in numeros)) and \
@@ -139,8 +150,9 @@ def validar_matriz(matriz):
                     continue
                 else:
                     print(f"Error en ({i}, {j}): con H")
+                    return False
 
-    return
+    return True
 
 
 #que cada isla tenga las conexiones necesarias
@@ -180,36 +192,41 @@ def validar_conexiones_necesarias(matriz):
 def escribir_matriz_en_archivo(ruta_archivo, matriz):
     with open(ruta_archivo, 'w') as archivo:
         for fila in matriz:
-            archivo.write(fila + '\n')
+            archivo.write(''.join(fila) + '\n')  # Unir la lista en una cadena y escribirla
+
 
 
 def validar_solucion(solucion):
     for i in range(len(solucion)):
         if(solucion[i][0] != solucion[i][1]):
-            print(f"PERDIO le faltan conexiones: a la isla {solucion[i][0]} tiene {solucion[i][1]} conexiones")
-    print("GANÓ eeee")
+            #print(f"PERDIO le faltan conexiones: a la isla {solucion[i][0]} tiene {solucion[i][1]} conexiones")
+            return False
+    #print("GANÓ eeee")
+    return True
 
 
-## Ejemplo de uso
-nombre_archivo = 'm.txt'
-matriz = leer_archivo(nombre_archivo)
 
-# Mostrar la matriz cuadrada
-for fila in matriz:
-    print(fila)
+if __name__ == '__main__':
+    ## Ejemplo de uso
+    nombre_archivo = 'm.txt'
+    matriz = leer_archivo(nombre_archivo)
 
-#Generar archivo de prueba
-escribir_matriz_en_archivo("generado.txt", matriz)
+    # Mostrar la matriz cuadrada
+    for fila in matriz:
+        print(*fila)
 
-print('-------------------------------------------------------')
-#Generar grafo a partir de matriz solucionada
-generar_grafo(matriz_a_grafo)
+    #Generar archivo de prueba
+    escribir_matriz_en_archivo("generado.txt", matriz)
 
-#validar_matriz(matriz)
+    print('-------------------------------------------------------')
+    #Generar grafo a partir de matriz solucionada
+    generar_grafo(matriz_a_grafo)
 
-#solucion = validar_conexiones_necesarias(matriz)
+    #validar_matriz(matriz)
 
-#validar_solucion(solucion)
+    #solucion = validar_conexiones_necesarias(matriz)
+
+    #validar_solucion(solucion)
 
 
 
