@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import Bridges
-SYMBOLS = [' ', '=', '-', '|', 'H', '']  + [str(i) for i in range(10)] # Símbolos permitidos
+SYMBOLS = [' ', '=', '-', '|', 'H', '']
+SYMBOLS_NUM = [' ', '=', '-', '|', 'H', ''] + [str(i) for i in range(10)]
 
 
 # Función para leer el archivo y crear la matriz
@@ -43,23 +44,29 @@ def guardar_estado(archivo, grid_state):
 
 
     matriz_valida = Bridges.validar_matriz(matriz_bridges) #RETORNA TRUE SI LAS CONEXIONES ESTAN BIEN
-    solucion = Bridges.validar_conexiones_necesarias(matriz_bridges) #RETORNA LAS CONEXIONES DE CADA ISLA
+    solucion = Bridges.validar_conexiones_necesarias(matriz_bridges)#RETORNA LAS CONEXIONES DE CADA ISLA
     ganador = Bridges.validar_solucion(solucion) #RETORNA TRUE SI ESAS CONEXIONES SON CORRECTAS
-    conectado = Bridges.generar_grafo(matriz_bridges)
+    if (ganador):
+        conectado = Bridges.generar_grafo(matriz_bridges)
 
-    with open(archivo, 'w') as f:
-        for fila in grid_state:
-            fila_str = ''.join(cell.get() if cell.get() != "" else ' ' for cell in fila)
-            f.write(fila_str + '\n')
+        with open(archivo, 'w') as f:
+            for fila in grid_state:
+                fila_str = ''.join(cell.get() if cell.get() != "" else ' ' for cell in fila)
+                f.write(fila_str + '\n')
 
-    if matriz_valida and ganador and conectado:
-        print("GANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+        if matriz_valida and ganador and conectado:
+            print("GANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+        else:
+            print("PERDIOOOOOOOO")
     else:
         print("PERDIOOOOOOOO")
 
 # Función para validar si los datos ingresados son válidos
 def validar_simbolo(simbolo):
     return simbolo in SYMBOLS
+
+def validar_simbolo_num(simbolo):
+    return simbolo in SYMBOLS_NUM
 
 # Función para actualizar el valor de una celda con validación
 def actualizar_celda(event, row, col):
@@ -70,7 +77,7 @@ def actualizar_celda(event, row, col):
 
 # Función de guardar con validación
 def guardar_con_validacion():
-    if all(validar_simbolo(celda.get()) for fila in celdas for celda in fila):
+    if all(validar_simbolo_num(celda.get()) for fila in celdas for celda in fila):
         guardar_estado("estado_guardado.txt", celdas)
         messagebox.showinfo("Éxito", "El estado ha sido guardado exitosamente.")
     else:
@@ -98,15 +105,21 @@ if __name__ == '__main__':
     for row in range(num_filas):
         for col in range(num_columnas):
             entry = tk.Entry(frame, width=4, justify='center')
-            entry.grid(row=row, column=col)
-            if col < len(matriz[row]) and matriz[row][col] != ' ':  # Check if the column index is within the valid range and not a space
+
+            # Verificar si la celda actual contiene un número
+            if col < len(matriz[row]) and matriz[row][col] != ' ':
                 entry.insert(0, matriz[row][col])  # Insertar el valor inicial desde el archivo
-            entry.bind('<FocusOut>', lambda e, r=row, c=col: actualizar_celda(e, r, c))  # Validar al salir del campo
+                entry.config(state='readonly')  # Hacer que esta celda sea de solo lectura
+            else:
+                entry.bind('<KeyRelease>',
+                           lambda e, r=row, c=col: actualizar_celda(e, r, c))  # Validar al Kiriliz
+
+            entry.grid(row=row, column=col)
             celdas[row][col] = entry
 
-    # Crear botón de "Guardar"
-    save_button = tk.Button(root, text="Guardar", command=guardar_con_validacion)
-    save_button.pack()
+# Crear botón de "Guardar"
+save_button = tk.Button(root, text="Guardar", command=guardar_con_validacion)
+save_button.pack()
 
-    # Iniciar la aplicación
-    root.mainloop()
+# Iniciar la aplicación
+root.mainloop()
