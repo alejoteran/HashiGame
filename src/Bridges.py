@@ -230,3 +230,43 @@ if __name__ == '__main__':
 
 
 
+def jugador_automatico():
+    global matriz_a_grafo
+
+    # Paso 1: Generar el grafo basado en la matriz inicial
+    grafo_generado = generar_grafo(matriz_a_grafo)
+
+    if not grafo_generado:
+        print("No se pudo generar un grafo conexo.")
+        return None
+
+    # Paso 2: Resolver el juego buscando conexiones válidas
+    filas = len(matriz_a_grafo)
+    columnas = len(matriz_a_grafo[0])
+
+    for i in range(filas):
+        for j in range(columnas):
+            if matriz_a_grafo[i][j].isdigit():
+                conexiones_restantes = int(matriz_a_grafo[i][j])
+
+                # Añadir conexiones según las reglas del juego
+                if conexiones_restantes > 0:
+                    if j + 2 < columnas and matriz_a_grafo[i][j + 1] == ' ' and matriz_a_grafo[i][j + 2].isdigit():
+                        matriz_a_grafo[i][j + 1] = '-'
+                        matriz_a_grafo[i][j + 2] = '=' if conexiones_restantes > 1 else '-'
+                        conexiones_restantes -= 1
+
+                    if i + 2 < filas and matriz_a_grafo[i + 1][j] == ' ' and matriz_a_grafo[i + 2][j].isdigit():
+                        matriz_a_grafo[i + 1][j] = '|'
+                        matriz_a_grafo[i + 2][j] = 'H' if conexiones_restantes > 1 else '|'
+                        conexiones_restantes -= 1
+
+    # Verificar si la solución es válida
+    solucion = validar_conexiones_necesarias(matriz_a_grafo)
+    if validar_solucion(solucion):
+        return matriz_a_grafo
+    else:
+        print("No se pudo resolver el juego automáticamente.")
+        return None
+
+
