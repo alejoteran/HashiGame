@@ -82,7 +82,7 @@ def guardar_con_validacion():
 
 
 if __name__ == '__main__':
-    matriz_inicial = Bridges.leer_archivo("m3.txt")
+    matriz_inicial = Bridges.leer_archivo("m6.txt")
     Bridges.escribir_matriz_en_archivo("generado.txt", matriz_inicial)
     archivo = "generado.txt"
     matriz, num_filas, num_columnas = leer_archivo_generado(archivo)
