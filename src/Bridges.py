@@ -208,7 +208,7 @@ def validar_solucion(solucion):
 
 if __name__ == '__main__':
     ## Ejemplo de uso
-    nombre_archivo = 'm.txt'
+    nombre_archivo = 'm2.txt'
     matriz = leer_archivo(nombre_archivo)
 
     # Mostrar la matriz cuadrada
@@ -230,43 +230,115 @@ if __name__ == '__main__':
 
 
 
-def jugador_automatico():
-    global matriz_a_grafo
+def jugador_automatico(matriz_inicial):
 
-    # Paso 1: Generar el grafo basado en la matriz inicial
-    grafo_generado = generar_grafo(matriz_a_grafo)
+    import copy
 
-    if not grafo_generado:
-        print("No se pudo generar un grafo conexo.")
-        return None
+    matriz = copy.deepcopy(matriz_inicial)
+    filas, columnas = len(matriz), len(matriz[0])
 
-    # Paso 2: Resolver el juego buscando conexiones válidas
-    filas = len(matriz_a_grafo)
-    columnas = len(matriz_a_grafo[0])
+    def dentro_limites(x, y):
+        return 0 <= x < filas and 0 <= y < columnas
 
-    for i in range(filas):
-        for j in range(columnas):
-            if matriz_a_grafo[i][j].isdigit():
-                conexiones_restantes = int(matriz_a_grafo[i][j])
 
-                # Añadir conexiones según las reglas del juego
-                if conexiones_restantes > 0:
-                    if j + 2 < columnas and matriz_a_grafo[i][j + 1] == ' ' and matriz_a_grafo[i][j + 2].isdigit():
-                        matriz_a_grafo[i][j + 1] = '-'
-                        matriz_a_grafo[i][j + 2] = '=' if conexiones_restantes > 1 else '-'
-                        conexiones_restantes -= 1
+    def encontrar_islas():
+        return [(x, y) for x in range(filas) for y in range(columnas) if matriz[x][y].isdigit()]
 
-                    if i + 2 < filas and matriz_a_grafo[i + 1][j] == ' ' and matriz_a_grafo[i + 2][j].isdigit():
-                        matriz_a_grafo[i + 1][j] = '|'
-                        matriz_a_grafo[i + 2][j] = 'H' if conexiones_restantes > 1 else '|'
-                        conexiones_restantes -= 1
+    def vecinos_isla(x, y):
+        vecinos = []
+        for i in range(x - 1, -1, -1):  # Arriba
+            if matriz[i][y] != ' ':
+                if matriz[i][y].isdigit():
+                    vecinos.append((i, y))
+                break
+        for i in range(x + 1, filas):  # Abajo
+            if matriz[i][y] != ' ':
+                if matriz[i][y].isdigit():
+                    vecinos.append((i, y))
+                break
+        for j in range(y - 1, -1, -1):  # Izquierda
+            if matriz[x][j] != ' ':
+                if matriz[x][j].isdigit():
+                    vecinos.append((x, j))
+                break
+        for j in range(y + 1, columnas):  # Derecha
+            if matriz[x][j] != ' ':
+                if matriz[x][j].isdigit():
+                    vecinos.append((x, j))
+                break
+        return vecinos
 
-    # Verificar si la solución es válida
-    solucion = validar_conexiones_necesarias(matriz_a_grafo)
-    if validar_solucion(solucion):
-        return matriz_a_grafo
+    def solucion_completa():
+        return all(int(matriz[x][y]) == 0 for x, y in islas)
+
+    def verificar_numeros_negativos():
+        """Devuelve True si hay algún número negativo en la matriz."""
+        for fila in matriz:
+            for celda in fila:
+                if celda.isdigit() and int(celda) < 0:
+                    return True
+        return False
+
+    def conectar_islas(x1, y1, x2, y2, tipo_puente):
+        # Guardamos una copia de la matriz antes de intentar modificarla
+        matriz_backup = copy.deepcopy(matriz)
+
+        if x1 == x2:  # Horizontal
+            paso = 1 if y2 > y1 else -1
+            for j in range(y1 + paso, y2, paso):
+                if matriz[x1][j] not in [' ', '-', '=']:
+                    return False
+            for j in range(y1 + paso, y2, paso):
+                matriz[x1][j] = '-' if tipo_puente == 1 else '='
+        elif y1 == y2:  # Vertical
+            paso = 1 if x2 > x1 else -1
+            for i in range(x1 + paso, x2, paso):
+                if matriz[i][y1] not in [' ', '|', 'H']:
+                    return False
+            for i in range(x1 + paso, x2, paso):
+                matriz[i][y1] = '|' if tipo_puente == 1 else 'H'
+        else:
+            return False
+
+        matriz[x1][y1] = str(int(matriz[x1][y1]) - tipo_puente)
+        matriz[x2][y2] = str(int(matriz[x2][y2]) - tipo_puente)
+
+        # Verificar si hay números negativos en la matriz
+        if verificar_numeros_negativos():
+            # Si encontramos números negativos, revertimos la matriz a su estado anterior
+            matriz[:] = matriz_backup[:]
+            return False
+        return True
+
+    def desconectar_islas(x1, y1, x2, y2, tipo_puente):
+        if x1 == x2:  # Horizontal
+            paso = 1 if y2 > y1 else -1
+            for j in range(y1 + paso, y2, paso):
+                matriz[x1][j] = ' '
+        elif y1 == y2:  # Vertical
+            paso = 1 if x2 > x1 else -1
+            for i in range(x1 + paso, x2, paso):
+                matriz[i][y1] = ' '
+        matriz[x1][y1] = str(int(matriz[x1][y1]) + tipo_puente)
+        matriz[x2][y2] = str(int(matriz[x2][y2]) + tipo_puente)
+
+
+    def backtrack():
+        if solucion_completa():
+            return True
+        for x, y in islas:
+            if int(matriz[x][y]) > 0:
+                vecinos = vecinos_isla(x, y)
+                for vx, vy in vecinos:
+                    for tipo_puente in [1, 2]:
+                        if conectar_islas(x, y, vx, vy, tipo_puente):
+                            if backtrack():
+                                return True
+                            desconectar_islas(x, y, vx, vy, tipo_puente)
+        return False
+
+    islas = encontrar_islas()
+    if backtrack():
+        return matriz
     else:
-        print("No se pudo resolver el juego automáticamente.")
         return None
-
-

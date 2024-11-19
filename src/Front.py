@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import Bridges
+import JugadorAu
 
 SYMBOLS = [' ', '=', '-', '|', 'H', '']
 SYMBOLS_NUM = [' ', '=', '-', '|', 'H', ''] + [str(i) for i in range(10)]
@@ -18,9 +19,13 @@ def leer_archivo_generado(archivo):
 
 
 # Función para actualizar el grid con la solución del jugador automático
-def jugador_automatico():
-    solucion = Bridges.jugador_automatico()  # Llama a la función que genera la solución
+def jugador_automatico(matriz_inicial):
+
+    solucion = Bridges.jugador_automatico(matriz_inicial) # Llama a la función que genera la solución
+    print("SOLUCION")
     if solucion:
+        for fila_sol in solucion:
+            print(fila_sol)
         for i, fila in enumerate(solucion):
             for j, valor in enumerate(fila):
                 if celdas[i][j]['state'] != 'readonly':  # No modificar celdas de solo lectura
@@ -58,7 +63,7 @@ def guardar_estado(archivo, grid_state):
 
 # Función para validar si los datos ingresados son válidos
 def validar_simbolo(simbolo):
-    return simbolo in SYMBOLS
+    return simbolo in SYMBOLS_NUM
 
 
 def actualizar_celda(event, row, col):
@@ -77,7 +82,8 @@ def guardar_con_validacion():
 
 
 if __name__ == '__main__':
-    Bridges.leer_archivo("m.txt")
+    matriz_inicial = Bridges.leer_archivo("m3.txt")
+    Bridges.escribir_matriz_en_archivo("generado.txt", matriz_inicial)
     archivo = "generado.txt"
     matriz, num_filas, num_columnas = leer_archivo_generado(archivo)
 
@@ -102,7 +108,7 @@ if __name__ == '__main__':
     save_button = tk.Button(root, text="Guardar", command=guardar_con_validacion)
     save_button.pack()
 
-    auto_button = tk.Button(root, text="Jugador Automático", command=jugador_automatico)
+    auto_button = tk.Button(root, text="Jugador Automático", command=lambda: jugador_automatico(matriz_inicial))
     auto_button.pack()
 
     root.mainloop()
